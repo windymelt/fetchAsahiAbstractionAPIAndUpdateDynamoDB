@@ -19,6 +19,7 @@ def lambda_handler(event:, context:)
       abstract = send_to_abstraction_api(text: article)
       update_dynamodb(dynamodb: dynamodb, url: url, status: "done", abstract: abstract)
     rescue => err
+      puts err
       return { statusCode: 200, body: JSON.generate('Ignoring due to too many requests') }
     end
   end
@@ -44,7 +45,7 @@ def send_to_abstraction_api(text:)
   params = { text: text, length: 500, auto_paragraph: true }
   html = Net::HTTP::post(uri, params.to_json, headers)
   json = JSON.parse(html)
-  return json.result.join('<br/>')
+  return json['result'].join('<br/>')
 end
 
 def update_dynamodb(dynamodb:, url:, status:, abstract:)
