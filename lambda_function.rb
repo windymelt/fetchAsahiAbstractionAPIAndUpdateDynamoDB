@@ -55,15 +55,15 @@ def send_to_abstraction_api(text:)
   return json['result'].join('▼')
 end
 
-def update_dynamodb(dynamodb:, url:, status:, abstract:)
+def update_dynamodb(dynamodb:, url:, status:, abstract:, ttl: = 0)
   params = {
     table_name: TABLE_NAME, 
     key: { url: url },
-    update_expression: 'set abstract = :ab, #st_col = :st',
+    update_expression: 'set abstract = :ab, #st_col = :st, expire = :ttl',
     # 'status' is reserved keyword.
     # we pass 'status' as attribute values to avoid this error
     expression_attribute_names: { '#st_col': 'status' },
-    expression_attribute_values: { ':ab': abstract, ':st': status },
+    expression_attribute_values: { ':ab': abstract, ':st': status, ':ttl': ttl },
     return_values: 'UPDATED_NEW'
   }
   begin
@@ -103,7 +103,7 @@ def break_circuit(dynamodb:)
     # 'status' is reserved keyword.
     # we pass 'status' as attribute values to avoid this error
     expression_attribute_names: { '#st_col': 'status' },
-    expression_attribute_values: { ':st': nextday.to_s },
+    expression_attribute_values: { ':st': nextday.iso8601() },
     return_values: 'UPDATED_NEW'
   }
   begin
